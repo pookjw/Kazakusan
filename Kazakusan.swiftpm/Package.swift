@@ -7,7 +7,7 @@
 import PackageDescription
 import AppleProductTypes
 
-let package = Package(
+let package: Package = .init(
     name: "Kazakusan",
     platforms: [
         .iOS("15.0")
@@ -35,7 +35,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../KazakusanCore.swiftpm")
+        .package(path: "../")
     ],
     targets: [
         .executableTarget(

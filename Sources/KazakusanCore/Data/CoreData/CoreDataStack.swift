@@ -8,10 +8,13 @@ actor CoreDataStack {
         case momdNotFound
         case momNotFound
         case modelInitFailed
+        case storeContainerIsRequired
+        case nothingToSave
     }
 
     static let shared: CoreDataStack = .init()
     private var storeContainers: [String: NSPersistentContainer] = [:]
+    private var contexts: [String: NSManagedObjectContext] = [:]
     
     private init() {}
     
@@ -28,7 +31,17 @@ actor CoreDataStack {
         }
         
         let model: NSManagedObjectModel = try model(from: modelName, momName: latestMomName)
-        let storeContainer: T = try await storeContainer(from: modelName, model: model)
+        let storeContainer: T = .init(name: modelName, managedObjectModel: model)
+        
+        let _: NSPersistentStoreDescription = try await withCheckedThrowingContinuation { continuation in
+            storeContainer.loadPersistentStores { description, error in
+                if let error: Swift.Error = error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: description)
+                }
+            }
+        }
         
         try await migrateIfNeeded()
         
@@ -37,13 +50,44 @@ actor CoreDataStack {
         return storeContainer
     }
     
-    private func model(from modelName: String, momName: String) throws -> NSManagedObjectModel {
-        guard let urls: [URL] = Bundle(for: type(of: self)).urls(forResourcesWithExtension: "mom", subdirectory: "\(modelName).momd") else {
-            throw Error.momdNotFound
+    func context(for modelName: String) throws -> NSManagedObjectContext {
+        if let context: NSManagedObjectContext = contexts[modelName] {
+            return context
         }
         
-        print(type(of: self))
-        print(Bundle(for: type(of: self)).urls(forResourcesWithExtension: nil, subdirectory: nil))
+        guard let storeContainer: NSPersistentContainer = storeContainers[modelName] else {
+            throw Error.storeContainerIsRequired
+        }
+        
+        let context: NSManagedObjectContext = storeContainer.newBackgroundContext()
+        context.automaticallyMergesChangesFromParent = true
+        
+        contexts[modelName] = context
+        return context
+    }
+    
+    nonisolated func saveChanges(for modelName: String) async throws {
+        let context: NSManagedObjectContext = try await context(for: modelName)
+        
+        guard context.hasChanges else {
+            throw Error.nothingToSave
+        }
+        
+        let _: Void = try await withCheckedThrowingContinuation { continuation in
+            context.perform {
+                do {
+                    try continuation.resume(returning: context.save())
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    private func model(from modelName: String, momName: String) throws -> NSManagedObjectModel {
+        guard let urls: [URL] = Bundle.module.urls(forResourcesWithExtension: "mom", subdirectory: "\(modelName).momd") else {
+            throw Error.momdNotFound
+        }
         
         guard let url: URL = urls.first(where: { $0.deletingPathExtension().lastPathComponent == momName }) else {
             throw Error.momNotFound
@@ -54,22 +98,6 @@ actor CoreDataStack {
         }
         
         return model
-    }
-    
-    private func storeContainer<T: NSPersistentContainer>(from modelName: String, model: NSManagedObjectModel) async throws -> T {
-        let container: T = .init(name: modelName, managedObjectModel: model)
-        
-        let _: NSPersistentStoreDescription = try await withCheckedThrowingContinuation { continuation in
-            container.loadPersistentStores { description, error in
-                if let error: Swift.Error = error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: description)
-                }
-            }
-        }
-        
-        return container
     }
     
     private func migrateIfNeeded() async throws {

@@ -14,7 +14,9 @@ let package: Package = .init(
         
     ],
     targets: [
-        .target(name: "KazakusanCore", dependencies: [], resources: [.process("Resources")]),
+        .target(name: "KazakusanCore",
+                dependencies: [],
+                resources: [.process("Resources")]),
         .testTarget(name: "KazakusanCoreTests", dependencies: ["KazakusanCore"], resources: [.process("Resources")])
     ]
 )

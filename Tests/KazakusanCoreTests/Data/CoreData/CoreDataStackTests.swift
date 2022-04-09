@@ -17,5 +17,6 @@ final class CoreDataStackTests: XCTestCase {
     
     func testDataCacheStoreContainer() async throws {
         let _: NSPersistentContainer = try await coreDataStack.storeContainer(for: "DataCache", momNames: ["DataCache_v1"])
+        _ = DataCacheRepoImpl.shared
     }
 }

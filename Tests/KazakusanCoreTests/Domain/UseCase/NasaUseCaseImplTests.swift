@@ -16,39 +16,13 @@ final class NasaUseCaseImplTests: XCTestCase {
     }
     
     func testSearch() async throws {
-        async let asset: NasaAsset = nasaUseCase.search(text: "Mars",
-                                                        center: nil,
-                                                        description: nil,
-                                                        description508: nil,
-                                                        keywords: nil,
-                                                        location: nil,
-                                                        mediaType: nil,
-                                                        nasaId: nil,
-                                                        page: nil,
-                                                        photographer: nil,
-                                                        secondaryCreator: nil,
-                                                        title: nil,
-                                                        yearStart: nil,
-                                                        yearEnd: nil)
+        async let asset: NasaAsset = nasaUseCase.search(searchData: .init(text: "Mars"))
         let count: Int = try await asset.collection?.items?.count ?? 0
         XCTAssertGreaterThan(count, 0)
     }
     
     func testPrevious() async throws {
-        let asset: NasaAsset = try await nasaUseCase.search(text: "Mars",
-                                                        center: nil,
-                                                        description: nil,
-                                                        description508: nil,
-                                                        keywords: nil,
-                                                        location: nil,
-                                                        mediaType: nil,
-                                                        nasaId: nil,
-                                                        page: nil,
-                                                        photographer: nil,
-                                                        secondaryCreator: nil,
-                                                        title: nil,
-                                                        yearStart: nil,
-                                                        yearEnd: nil)
+        let asset: NasaAsset = try await nasaUseCase.search(searchData: .init(text: "Mars"))
         
         let nextAsset: NasaAsset = try await nasaUseCase.next(for: asset)
         let previousAsset: NasaAsset = try await nasaUseCase.previous(for: nextAsset)
@@ -57,20 +31,7 @@ final class NasaUseCaseImplTests: XCTestCase {
     }
     
     func testNext() async throws {
-        let asset: NasaAsset = try await nasaUseCase.search(text: "Mars",
-                                                        center: nil,
-                                                        description: nil,
-                                                        description508: nil,
-                                                        keywords: nil,
-                                                        location: nil,
-                                                        mediaType: nil,
-                                                        nasaId: nil,
-                                                        page: nil,
-                                                        photographer: nil,
-                                                        secondaryCreator: nil,
-                                                        title: nil,
-                                                        yearStart: nil,
-                                                        yearEnd: nil)
+        let asset: NasaAsset = try await nasaUseCase.search(searchData: .init(text: "Mars"))
         
         async let nextAsset: NasaAsset = nasaUseCase.next(for: asset)
         let count: Int = try await nextAsset.collection?.items?.count ?? 0
@@ -91,20 +52,7 @@ final class NasaUseCaseImplTests: XCTestCase {
     }
     
     func testMetaData() async throws {
-        async let asset: NasaAsset = nasaUseCase.search(text: nil,
-                                                        center: nil,
-                                                        description: nil,
-                                                        description508: nil,
-                                                        keywords: nil,
-                                                        location: nil,
-                                                        mediaType: nil,
-                                                        nasaId: "Launch-Sound_Delta-2-Launch",
-                                                        page: nil,
-                                                        photographer: nil,
-                                                        secondaryCreator: nil,
-                                                        title: nil,
-                                                        yearStart: nil,
-                                                        yearEnd: nil)
+        async let asset: NasaAsset = nasaUseCase.search(searchData: .init(nasaId: "Launch-Sound_Delta-2-Launch"))
         
         guard let data: NasaAsset.Item.Data = try await asset.collection?.items?.first?.data?.first else {
             XCTFail("Cannot find data.")
@@ -116,20 +64,7 @@ final class NasaUseCaseImplTests: XCTestCase {
     }
     
     func testCaptions() async throws {
-        async let asset: NasaAsset = nasaUseCase.search(text: nil,
-                                                        center: nil,
-                                                        description: nil,
-                                                        description508: nil,
-                                                        keywords: nil,
-                                                        location: nil,
-                                                        mediaType: nil,
-                                                        nasaId: "172_ISS-Slosh",
-                                                        page: nil,
-                                                        photographer: nil,
-                                                        secondaryCreator: nil,
-                                                        title: nil,
-                                                        yearStart: nil,
-                                                        yearEnd: nil)
+        async let asset: NasaAsset = nasaUseCase.search(searchData: .init(nasaId: "172_ISS-Slosh"))
         
         guard let data: NasaAsset.Item.Data = try await asset.collection?.items?.first?.data?.first else {
             XCTFail("Cannot find data.")

@@ -8,15 +8,15 @@ import PackageDescription
 import AppleProductTypes
 
 let package: Package = .init(
-    name: "Kazakusan",
+    name: "KazakusanApp",
     platforms: [
         .iOS("15.0")
     ],
     products: [
         .iOSApplication(
-            name: "Kazakusan",
+            name: "KazakusanApp",
             targets: ["AppModule"],
-            bundleIdentifier: "com.pookjw.Kazakusan",
+            bundleIdentifier: "com.pookjw.KazakusanApp",
             teamIdentifier: "P53D29U9LJ",
             displayVersion: "1.0",
             bundleVersion: "1",
@@ -42,7 +42,7 @@ let package: Package = .init(
             name: "AppModule",
             dependencies: [],
             path: ".",
-            plugins: [.plugin(name: "KazakusanCore", package: "KazakusanCore")]
+            plugins: [.plugin(name: "KazakusanCore", package: "Kazakusan")]
         )
     ]
 )

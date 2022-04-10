@@ -59,7 +59,7 @@ public extension NasaAsset {
             var container: KeyedEncodingContainer<CodingKeys> = encoder.container(keyedBy: CodingKeys.self)
             
             try container.encode(version, forKey: .version)
-            try container.encode(href?.absoluteString, forKey: .href)
+            try container.encode(href, forKey: .href)
             try container.encode(items, forKey: .items)
             try container.encode(metadata, forKey: .metadata)
             try container.encode(links, forKey: .links)
@@ -82,9 +82,10 @@ public extension NasaAsset {
     struct Item: Codable, Hashable, Equatable {
         public let href: URL?
         public let data: [Item.Data]?
+        public let links: [Link]?
         
         private enum CodingKeys: String, CodingKey {
-            case href, data
+            case href, data, links
         }
         
         public init(from decoder: Decoder) throws {
@@ -98,13 +99,15 @@ public extension NasaAsset {
             }
             
             self.data = try? container.decode([Item.Data]?.self, forKey: .data)
+            self.links = try? container.decode([Link]?.self, forKey: .links)
         }
         
         public func encode(to encoder: Encoder) throws {
             var container: KeyedEncodingContainer<CodingKeys> = encoder.container(keyedBy: CodingKeys.self)
             
-            try container.encode(href?.absoluteString, forKey: .href)
+            try container.encode(href, forKey: .href)
             try container.encode(data, forKey: .data)
+            try container.encode(links, forKey: .links)
         }
         
         public func hash(into hasher: inout Hasher) {
@@ -175,13 +178,7 @@ public extension NasaAsset.Item {
             try container.encode(location, forKey: .location)
             try container.encode(nasaId, forKey: .nasa_id)
             try container.encode(mediaType?.rawValue, forKey: .media_type)
-            
-            if let dateCreated: Date = dateCreated {
-                let formatter: ISO8601DateFormatter = .init()
-                let dateCreatedString: String = formatter.string(from: dateCreated)
-                try container.encode(dateCreatedString, forKey: .date_created)
-            }
-            
+            try container.encode(dateCreated, forKey: .date_created)
             try container.encode(center, forKey: .center)
         }
         
@@ -197,6 +194,46 @@ public extension NasaAsset.Item {
         
         public static func ==(lhs: Data, rhs: Data) -> Bool {
             return lhs.hashValue == rhs.hashValue
+        }
+    }
+}
+
+public extension NasaAsset.Item {
+    struct Link: Codable, Hashable, Equatable {
+        public let href: URL?
+        public let rel: String?
+        public let render: String?
+        
+        private enum CodingKeys: String, CodingKey {
+            case href, rel, render
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
+            
+            if let hrefString: String = try? container.decode(String?.self, forKey: .href),
+               let href: URL = .init(string: hrefString) {
+                self.href = href
+            } else {
+                self.href = nil
+            }
+            
+            self.rel = try? container.decode(String?.self, forKey: .rel)
+            self.render = try? container.decode(String?.self, forKey: .render)
+        }
+        
+        public func encode(to encoder: Encoder) throws {
+            var container: KeyedEncodingContainer<CodingKeys> = encoder.container(keyedBy: CodingKeys.self)
+            
+            try container.encode(href, forKey: .href)
+            try container.encode(rel, forKey: .rel)
+            try container.encode(render, forKey: .render)
+        }
+        
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(href)
+            hasher.combine(rel)
+            hasher.combine(render)
         }
     }
 }
@@ -260,7 +297,7 @@ public extension NasaAsset {
             
             try container.encode(rel, forKey: .rel)
             try container.encode(prompt, forKey: .prompt)
-            try container.encode(href?.absoluteString, forKey: .href)
+            try container.encode(href, forKey: .href)
         }
         
         public func hash(into hasher: inout Hasher) {

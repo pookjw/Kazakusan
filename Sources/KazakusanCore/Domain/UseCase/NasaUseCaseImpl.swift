@@ -50,21 +50,23 @@ public final class NasaUseCaseImpl: NasaUseCase {
         }
     }
     
-    public func search(text: String?,
-                       center: String?,
-                       description: String?,
-                       description508: String?,
-                       keywords: Set<String>?,
-                       location: String?,
-                       mediaType: Set<NasaAsset.Item.Data.MediaType>?,
-                       nasaId: String?,
-                       page: Int?,
-                       photographer: String?,
-                       secondaryCreator: String?,
-                       title: String?,
-                       yearStart: Int?,
-                       yearEnd: Int?) async throws -> NasaAsset {
-        return try await nasaAssetRepo.search(text: text, center: center, description: description, description508: description508, keywords: keywords, location: location, mediaType: mediaType, nasaId: nasaId, page: page, photographer: photographer, secondaryCreator: secondaryCreator, title: title, yearStart: yearStart, yearEnd: yearEnd)
+    public func search(searchData: NasaUseCaseSearchData) async throws -> NasaAsset {
+        return try await nasaAssetRepo.search(
+            text: searchData.text,
+            center: searchData.center,
+            description: searchData.description,
+            description508: searchData.description508,
+            keywords: searchData.keywords,
+            location: searchData.location,
+            mediaType: searchData.mediaType,
+            nasaId: searchData.nasaId,
+            page: searchData.page,
+            photographer: searchData.photographer,
+            secondaryCreator: searchData.secondaryCreator,
+            title: searchData.title,
+            yearStart: searchData.yearStart,
+            yearEnd: searchData.yearEnd
+        )
     }
     
     public func previous(for asset: NasaAsset) async throws -> NasaAsset {

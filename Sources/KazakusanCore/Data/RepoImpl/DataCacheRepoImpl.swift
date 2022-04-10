@@ -195,27 +195,31 @@ import CoreData
         
         await setInReadTransaction(true)
         
-        let fetchRequest: NSFetchRequest<DataCache> = await .init(entityName: DataCacheRepoImpl.shared.modelName)
+        let fetchRequest: NSFetchRequest<DataCache> = await .init(entityName: modelName)
         let predicate: NSPredicate = .init(format: "%K = %@", #keyPath(DataCache.identity), identity)
         fetchRequest.predicate = predicate
         
         let context: NSManagedObjectContext = try await context
-        let result: DataCache = try await withCheckedThrowingContinuation { continuation in
-            context.perform {
-                do {
-                    guard let dataCache: DataCache = try context.fetch(fetchRequest).first else {
-                        throw Error.noDataCacheFround(identity: identity)
+        
+        do {
+            let result: DataCache = try await withCheckedThrowingContinuation { continuation in
+                context.perform {
+                    do {
+                        guard let dataCache: DataCache = try context.fetch(fetchRequest).first else {
+                            throw Error.noDataCacheFround(identity: identity)
+                        }
+                        continuation.resume(returning: dataCache)
+                    } catch {
+                        continuation.resume(throwing: error)
                     }
-                    continuation.resume(returning: dataCache)
-                } catch {
-                    continuation.resume(throwing: error)
                 }
             }
+            await setInReadTransaction(false)
+            return result
+        } catch {
+            await setInReadTransaction(false)
+            throw error
         }
-        
-        await setInReadTransaction(false)
-        
-        return result
     }
     
     nonisolated func createDataCache() async throws -> DataCache {

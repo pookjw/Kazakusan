@@ -2,59 +2,55 @@ import SwiftUI
 import KazakusanCore
 
 struct AssetsView: View {
-    @Binding private var searchData: NasaUseCaseSearchData
-    @ObservedObject private var viewModel: AssetsViewModel
-    @State private var columns: [GridItem] = []
-    
-    init(searchData: Binding<NasaUseCaseSearchData>?) {
-        let searchData: Binding<NasaUseCaseSearchData> = searchData ?? .constant(.init())
-        self._searchData = searchData
-        
-        let viewModel: AssetsViewModel = .init()
-        self.viewModel = viewModel
-        Task {
-            await viewModel.updateItems(using: searchData.wrappedValue)
-        }
-    }
+    @State private var text: String = ""
+    @StateObject private var viewModel: AssetsViewModel = .init()
+    private let tasksBag: TasksBag<Void, Never> = .init()
     
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: true) {
-            LazyVGrid(columns: columns) {
-                ForEach(0..<columns.count, id: \.self) {
-                    if let url: URL = viewModel.items[$0].links?.first?.href {
-                        AnyView(DataCacheImageView(url: url))
-                    } else {
-                        AnyView(EmptyView())
-                    }
+        List(viewModel.items, id: \.1.hashValue) { (index, item) in
+            VStack {
+                switch item.data?.first?.mediaType {
+                case .image:
+                    AssetItemImageView(assetItem: item)
+                case .video:
+                    Text("Video type is not supported yet.")
+                case .audio:
+                    Text("Audio type is not supported yet.")
+                default:
+                    Text("No data was found.")
+                        .onAppear {
+                            print(item)
+                        }
                 }
-            }
-        }
-        .onChange(of: searchData, perform: { newValue in
-            Task {
-                await viewModel.updateItems(using: newValue)
-            }
-        })
-        .onChange(of: viewModel.items, perform: { newValue in
-            Task(priority: .high) {
-//                var columns: [GridItem] = []
-//
-//                items.forEach { item in
-//                    let column: GridItem = .init(.flexible(minimum: .zero, maximum: 300), spacing: nil, alignment: .center)
-//                }
-                let columns: [GridItem] = .init(repeating: .init(.fixed(300.0), spacing: nil, alignment: .center), count: newValue.count)
                 
-                await MainActor.run {
-                    self.columns = columns
+                if index < (viewModel.itemsCount - 1) {
+                    Color
+                        .gray
+                        .opacity(0.5)
+                        .frame(height: 0.5)
                 }
             }
+            .listRowSeparator(.hidden)
+        }
+        .onAppear {
+            tasksBag.store(task: .init(operation: {
+                await viewModel.requestRecents()
+            }))
+        }
+        .searchable(text: $text)
+        .onSubmit(of: .search, {
+            tasksBag.store(task: .init {
+                await viewModel.request(text: text)
+            })
         })
+        .navigationTitle("Assets")
     }
 }
 
 #if DEBUG
 struct AssetsView_Previews: PreviewProvider {
     static var previews: some View {
-        AssetsView(searchData: nil)
+        AssetsView()
     }
 }
 #endif

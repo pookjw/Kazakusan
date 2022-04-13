@@ -13,54 +13,56 @@ final class DataCacheImageViewModel: ObservableObject {
     
     @MainActor @Published private(set) var status: Status = .pending
     private let dataCacheUseCase: DataCacheUseCase
-    private var fetchTask: Task<Void, Never>?
+    private var loadTask: Task<Void, Never>?
     
-    init(url: URL, dataCacheUseCase: DataCacheUseCase? = nil) {
+    init(dataCacheUseCase: DataCacheUseCase? = nil) {
         if let dataCacheUseCase: DataCacheUseCase = dataCacheUseCase {
             self.dataCacheUseCase = dataCacheUseCase
         } else {
             self.dataCacheUseCase = DataCacheUseCaseImpl()
         }
-        
-        fetchTask = .init(priority: .high) { [weak self] in
-            await self?.fetch(url: url)
-        }
     }
     
     deinit {
-        fetchTask?.cancel()
+        loadTask?.cancel()
     }
     
-    private func fetch(url: URL) async {
-        let setStatus: (Status) -> () = { [weak self] status in
-            Task { @MainActor [weak self] in
-                self?.status = status
-            }
-        }
-        
-        setStatus(.loading)
-        
-        guard let dataCache: DataCache = try? await dataCacheUseCase.dataCache(with: url.absoluteString),
-              let data: Data = dataCache.data,
-              let uiImage: UIImage = .init(data: data) else {
-            do {
-//                Logger().info("Not cached: \(url.absoluteString)")
-                
-                let data: Data = try await download(from: url)
-                guard let uiImage: UIImage = .init(data: data) else {
-                    throw Error.failedToInitUIImage
+    func load(url: URL) {
+        loadTask = .init(priority: .high, operation: { [weak self] in
+            let setStatus: (Status) -> () = { [weak self] status in
+                Task { @MainActor [weak self] in
+                    self?.status = status
                 }
-                
-                setStatus(.loaded(uiImage))
-                try? await saveCache(uiImage: uiImage, url: url)
-            } catch {
-                setStatus(.error(error))
             }
-            return
-        }
+            
+            setStatus(.loading)
+            
+            guard let dataCache: DataCache = try? await dataCacheUseCase.dataCache(with: url.absoluteString),
+                  let data: Data = dataCache.data,
+                  let uiImage: UIImage = .init(data: data) else {
+                do {
+    //                Logger().info("Not cached: \(url.absoluteString)")
+                    
+                    let data: Data = try await download(from: url)
+                    guard let uiImage: UIImage = .init(data: data) else {
+                        throw Error.failedToInitUIImage
+                    }
+                    
+                    setStatus(.loaded(uiImage))
+                    try? await saveCache(uiImage: uiImage, url: url)
+                } catch {
+                    setStatus(.error(error))
+                }
+                return
+            }
+            
+    //        Logger().info("Cached: \(url.absoluteString)")
+            setStatus(.loaded(uiImage))
+        })
+    }
+    
+    func resign() {
         
-//        Logger().info("Cached: \(url.absoluteString)")
-        setStatus(.loaded(uiImage))
     }
     
     private func download(from url: URL) async throws -> Data {

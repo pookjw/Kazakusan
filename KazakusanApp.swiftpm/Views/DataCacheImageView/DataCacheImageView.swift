@@ -1,55 +1,63 @@
 import SwiftUI
 
-struct DataCacheImageView: View {
-    @ObservedObject private var viewModel: DataCacheImageViewModel
-    private let completion: ((Result<Image, Error>) -> AnyView?)?
+struct DataCacheImageView<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
+    private let url: URL
+    @StateObject private var viewModel: DataCacheImageViewModel = .init()
+    private let completion: ((Result<Image, Error>) -> Content)
     
-    init(url: URL, completion: ((Result<Image, Error>) -> AnyView?)? = nil) {
-        self.viewModel = .init(url: url)
+    init(url: URL, completion: @escaping ((Result<Image, Error>) -> Content)) {
+        self.url = url
         self.completion = completion
+    }
+    
+    init(url: URL) where Content == AnyView {
+        self.init(url: url) { result in
+            switch result {
+            case .success(let image):
+                return image
+                    .resizable()
+                    .scaledToFit()
+                    .eraseType()
+            case .failure(let error):
+                return Label(error.localizedDescription, systemImage: "xmark.octagon")
+                    .eraseType()
+            }
+        }
     }
     
     var body: some View {
         switch viewModel.status {
-        case .pending, .loading:
-            return AnyView(ProgressView())
+        case .pending:
+            SpinnerView()
+                .unfilledColor(Color.gray.opacity(0.5))
+                .filledColor((colorScheme == .light) ? .black : .white)
+                .frame(width: 50.0, height: 50.0)
+                .onAppear {
+//                    viewModel.load(url: url)
+                }
+                .eraseType()
+        case .loading:
+            SpinnerView()
+                .unfilledColor(Color.gray.opacity(0.5))
+                .filledColor((colorScheme == .light) ? .black : .white)
+                .frame(width: 50.0, height: 50.0)
+                .eraseType()
         case let .loaded(uiImage):
-            let image: Image = .init(uiImage: uiImage)
-            
-            if let view: AnyView = completion?(.success(image)) {
-                return view
-            } else {
-                return AnyView(
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                )
-            }
+            completion(.success(Image(uiImage: uiImage)))
+                .eraseType()
         case let .error(error):
-            if let view: AnyView = completion?(.failure(error)) {
-                return view
-            } else {
-                let label: Label = .init(error.localizedDescription, systemImage: "xmark.octagon")
-                return AnyView(label)
-            }
+            completion(.failure(error))
+                .eraseType()
         }
     }
 }
 
 #if DEBUG
-struct DataCacheImageView_Previews: PreviewProvider {
-    private static let url: URL = .init(string: "https://images-assets.nasa.gov/image/PIA01120/PIA01120~orig.jpg")!
-    static var previews: some View {
-        DataCacheImageView(url: url)
-        
-        DataCacheImageView(url: url) { result in
-            switch result {
-            case let .success(image):
-                return AnyView(image.antialiased(true))
-            case .failure:
-                return nil
-            }
-        }
-    }
-}
+//struct DataCacheImageView_Previews: PreviewProvider {
+//    private static let url: URL = .init(string: "https://images-assets.nasa.gov/image/PIA01120/PIA01120~orig.jpg")!
+//    static var previews: some View {
+//        DataCacheImageView(url: url)
+//    }
+//}
 #endif

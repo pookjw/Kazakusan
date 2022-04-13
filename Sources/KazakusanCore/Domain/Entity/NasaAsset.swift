@@ -151,7 +151,7 @@ public extension NasaAsset.Item {
             self.location = try? container.decode(String?.self, forKey: .location)
             self.nasaId = try? container.decode(String?.self, forKey: .nasa_id)
             
-            if let mediaTypeString: String = try? container.decode(String?.self, forKey: .nasa_id),
+            if let mediaTypeString: String = try? container.decode(String?.self, forKey: .media_type),
                let mediaType: MediaType = .init(rawValue: mediaTypeString) {
                 self.mediaType = mediaType
             } else {

@@ -1,7 +1,11 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State var text: String = ""
+    
     var body: some View {
-        AssetsView(searchData: .constant(.init(text: "Mars")))
+        NavigationView {
+            AssetsView()
+        }
     }
 }

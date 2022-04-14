@@ -7,7 +7,7 @@ struct AssetsView: View {
     private let tasksBag: TasksBag<Void, Never> = .init()
     
     var body: some View {
-        List(stateViewModel.items, id: \.1.hashValue) { (index, item) in
+        List(Array(stateViewModel.items.enumerated()), id: \.1.hashValue) { (index, item) in
             VStack {
                 switch item.data?.first?.mediaType {
                 case .image:
@@ -32,6 +32,7 @@ struct AssetsView: View {
             }
             .listRowSeparator(.hidden)
         }
+        .listStyle(.plain)
         .onAppear {
             tasksBag.store(task: .init(operation: {
                 await stateViewModel.requestRecents()

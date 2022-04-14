@@ -7,7 +7,7 @@ actor AssetsStateViewModel: ObservableObject {
     }
     
     @MainActor @Published var text: String = ""
-    @MainActor @Published private(set) var items: [(Int, NasaAsset.Item)] = []
+    @MainActor @Published private(set) var items: [NasaAsset.Item] = []
     @MainActor private(set) var itemsCount: Int = 0
     @State private(set) var searchError: Swift.Error?
     private var currentAsset: NasaAsset?
@@ -30,12 +30,11 @@ actor AssetsStateViewModel: ObservableObject {
             }
             
             currentAsset = asset
-            let enumerated: [(Int, NasaAsset.Item)] = Array(items.enumerated())
-            let count: Int = enumerated.count
+            let count: Int = items.count
             
             await MainActor.run { [weak self] in
 //                self?.items.append(contentsOf: items)
-                self?.items = enumerated
+                self?.items = items
                 self?.itemsCount = count
             }
         } catch {
@@ -51,12 +50,11 @@ actor AssetsStateViewModel: ObservableObject {
             }
             
             currentAsset = asset
-            let enumerated: [(Int, NasaAsset.Item)] = Array(items.enumerated())
-            let count: Int = enumerated.count
+            let count: Int = items.count
             
             await MainActor.run { [weak self] in
 //                self?.items.append(contentsOf: items)
-                self?.items = enumerated
+                self?.items = items
                 self?.itemsCount = count
             }
         } catch {

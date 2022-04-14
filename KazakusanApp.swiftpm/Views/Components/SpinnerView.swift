@@ -1,42 +1,47 @@
 import SwiftUI
 
 struct SpinnerView: View {
-    @ObservedObject private var viewModel: SpinnerViewModel = .init()
+    @ObservedObject private var observedViewModel: SpinnerObservedViewModel = .init()
+    @StateObject private var stateViewModel: SpinnerViewStateViewModel = .init()
     
     var body: some View {
         ZStack {
             Circle()
-                .strokeBorder(lineWidth: viewModel.lineWidth, antialiased: true)
-                .foregroundColor(viewModel.unfilledColor)
-            
-            RadianShape(radians: $viewModel.radians, lineWidth: $viewModel.lineWidth)
+                .strokeBorder(lineWidth: observedViewModel.lineWidth, antialiased: true)
+                .foregroundColor(observedViewModel.unfilledColor)
+
+            RadianShape(radians: $observedViewModel.radians, lineWidth: $observedViewModel.lineWidth)
                 .clipped(antialiased: true)
-                .foregroundColor(viewModel.filledColor)
-                .onAppear { viewModel.isAnimating = true }
-                .onDisappear { viewModel.isAnimating = false }
+                .foregroundColor(observedViewModel.filledColor)
+                .rotationEffect(stateViewModel.isAnimating ? Angle(radians: CGFloat.pi * 2) : .zero)
+                .animation(stateViewModel.isAnimating ? .easeInOut(duration: observedViewModel.duration).repeatForever(autoreverses: false) : .default, value: stateViewModel.isAnimating)
         }
-        .rotationEffect(Angle(radians: viewModel.isAnimating ? (CGFloat.pi * 2) : (.zero)))
-        .animation(viewModel.isAnimating ? .linear(duration: viewModel.duration).repeatForever(autoreverses: false) : nil, value: viewModel.isAnimating)
         .aspectRatio(1.0, contentMode: .fit)
+        .onAppear {
+            stateViewModel.isAnimating = true
+        }
+        .onDisappear {
+            stateViewModel.isAnimating = false
+        }
     }
     
     func lineWidth(_ lineWidth: CGFloat) -> SpinnerView {
-        self.viewModel.lineWidth = lineWidth
+        self.observedViewModel.lineWidth = lineWidth
         return self
     }
     
     func unfilledColor(_ unfilledColor: Color) -> SpinnerView {
-        self.viewModel.unfilledColor = unfilledColor
+        self.observedViewModel.unfilledColor = unfilledColor
         return self
     }
     
     func filledColor(_ filledColor: Color) -> SpinnerView {
-        self.viewModel.filledColor = filledColor
+        self.observedViewModel.filledColor = filledColor
         return self
     }
     
     func duration(_ duration: Double) -> SpinnerView {
-        self.viewModel.duration = duration
+        self.observedViewModel.duration = duration
         return self
     }
 }
@@ -65,6 +70,8 @@ fileprivate struct RadianShape: Shape {
                         clockwise: true)
             
             path.addLine(to: CGPoint(x: rect.midX, y: .zero))
+            
+            path.closeSubpath()
         }
     }
 }

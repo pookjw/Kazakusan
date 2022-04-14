@@ -1,11 +1,12 @@
 import SwiftUI
 import KazakusanCore
 
-actor AssetsViewModel: ObservableObject {
+actor AssetsStateViewModel: ObservableObject {
     enum Error: Swift.Error {
         case noResults
     }
     
+    @MainActor @Published var text: String = ""
     @MainActor @Published private(set) var items: [(Int, NasaAsset.Item)] = []
     @MainActor private(set) var itemsCount: Int = 0
     @State private(set) var searchError: Swift.Error?

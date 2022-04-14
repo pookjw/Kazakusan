@@ -2,7 +2,7 @@ import SwiftUI
 import OSLog
 import KazakusanCore
 
-final class DataCacheImageViewModel: ObservableObject {
+final class DataCacheImageStateViewModel: ObservableObject {
     enum Status {
         case pending, loading, error(Swift.Error), loaded(UIImage)
     }

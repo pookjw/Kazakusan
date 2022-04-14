@@ -3,10 +3,10 @@ import SwiftUI
 struct DataCacheImageView<Content: View>: View {
     @Environment(\.colorScheme) private var colorScheme
     private let url: URL
-    @StateObject private var viewModel: DataCacheImageViewModel = .init()
-    private let completion: ((Result<Image, Error>) -> Content)
+    @StateObject private var stateViewModel: DataCacheImageStateViewModel = .init()
+    @ViewBuilder private let completion: ((Result<Image, Error>) -> Content)
     
-    init(url: URL, completion: @escaping ((Result<Image, Error>) -> Content)) {
+    init(url: URL, @ViewBuilder completion: @escaping ((Result<Image, Error>) -> Content)) {
         self.url = url
         self.completion = completion
     }
@@ -26,29 +26,24 @@ struct DataCacheImageView<Content: View>: View {
         }
     }
     
+    @ViewBuilder
     var body: some View {
-        switch viewModel.status {
-        case .pending:
+        switch stateViewModel.status {
+        case .pending, .loading:
             SpinnerView()
                 .unfilledColor(Color.gray.opacity(0.5))
                 .filledColor((colorScheme == .light) ? .black : .white)
                 .frame(width: 50.0, height: 50.0)
                 .onAppear {
-//                    viewModel.load(url: url)
+                    if case .pending = stateViewModel.status {
+                        
+                    }
+//                    stateViewModel.load(url: url)
                 }
-                .eraseType()
-        case .loading:
-            SpinnerView()
-                .unfilledColor(Color.gray.opacity(0.5))
-                .filledColor((colorScheme == .light) ? .black : .white)
-                .frame(width: 50.0, height: 50.0)
-                .eraseType()
         case let .loaded(uiImage):
             completion(.success(Image(uiImage: uiImage)))
-                .eraseType()
         case let .error(error):
             completion(.failure(error))
-                .eraseType()
         }
     }
 }

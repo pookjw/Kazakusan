@@ -2,45 +2,54 @@ import SwiftUI
 import KazakusanCore
 
 struct AssetsView: View {
-    @State private var text: String = ""
-    @StateObject private var viewModel: AssetsViewModel = .init()
+    @Environment(\.colorScheme) private var colorScheme
+    @StateObject private var stateViewModel: AssetsStateViewModel = .init()
     private let tasksBag: TasksBag<Void, Never> = .init()
     
     var body: some View {
-        List(viewModel.items, id: \.1.hashValue) { (index, item) in
+        List(stateViewModel.items, id: \.1.hashValue) { (index, item) in
             VStack {
-                switch item.data?.first?.mediaType {
-                case .image:
-                    AssetItemImageView(assetItem: item)
-                case .video:
-                    Text("Video type is not supported yet.")
-                case .audio:
-                    Text("Audio type is not supported yet.")
-                default:
-                    Text("No data was found.")
-                        .onAppear {
-                            print(item)
-                        }
-                }
-                
-                if index < (viewModel.itemsCount - 1) {
-                    Color
-                        .gray
-                        .opacity(0.5)
-                        .frame(height: 0.5)
-                }
+                SpinnerView()
+//                switch item.data?.first?.mediaType {
+//                case .image:
+//                    AssetItemImageView(assetItem: item)
+//                case .video:
+//                    Text("Video type is not supported yet.")
+//                case .audio:
+//                    Text("Audio type is not supported yet.")
+//                default:
+//                    Text("No data was found.")
+//                        .onAppear {
+//                            print(item)
+//                        }
+//                }
+//
+//                if index < (stateViewModel.itemsCount - 1) {
+//                    Color
+//                        .gray
+//                        .opacity(0.5)
+//                        .frame(height: 0.5)
+//                }
             }
             .listRowSeparator(.hidden)
         }
         .onAppear {
             tasksBag.store(task: .init(operation: {
-                await viewModel.requestRecents()
+                await stateViewModel.requestRecents()
             }))
         }
-        .searchable(text: $text)
+//        .overlay(alignment: .center) {
+//            SpinnerView()
+//                .unfilledColor(Color.gray.opacity(0.5))
+//                .filledColor((colorScheme == .light) ? .black : .white)
+//                .padding(10.0)
+//                .background(.ultraThinMaterial)
+//                .frame(width: 60.0, height: 60.0)
+//        }
+        .searchable(text: $stateViewModel.text)
         .onSubmit(of: .search, {
             tasksBag.store(task: .init {
-                await viewModel.request(text: text)
+                await stateViewModel.request(text: stateViewModel.text)
             })
         })
         .navigationTitle("Assets")

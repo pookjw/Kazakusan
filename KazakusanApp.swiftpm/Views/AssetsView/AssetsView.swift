@@ -9,27 +9,26 @@ struct AssetsView: View {
     var body: some View {
         List(stateViewModel.items, id: \.1.hashValue) { (index, item) in
             VStack {
-                SpinnerView()
-//                switch item.data?.first?.mediaType {
-//                case .image:
-//                    AssetItemImageView(assetItem: item)
-//                case .video:
-//                    Text("Video type is not supported yet.")
-//                case .audio:
-//                    Text("Audio type is not supported yet.")
-//                default:
-//                    Text("No data was found.")
-//                        .onAppear {
-//                            print(item)
-//                        }
-//                }
-//
-//                if index < (stateViewModel.itemsCount - 1) {
-//                    Color
-//                        .gray
-//                        .opacity(0.5)
-//                        .frame(height: 0.5)
-//                }
+                switch item.data?.first?.mediaType {
+                case .image:
+                    AssetItemImageView(assetItem: item)
+                case .video:
+                    Text("Video type is not supported yet.")
+                case .audio:
+                    Text("Audio type is not supported yet.")
+                default:
+                    Text("No data was found.")
+                        .onAppear {
+                            print(item)
+                        }
+                }
+
+                if index < (stateViewModel.itemsCount - 1) {
+                    Color
+                        .gray
+                        .opacity(0.5)
+                        .frame(height: 0.5)
+                }
             }
             .listRowSeparator(.hidden)
         }

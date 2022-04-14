@@ -36,9 +36,8 @@ struct DataCacheImageView<Content: View>: View {
                 .frame(width: 50.0, height: 50.0)
                 .onAppear {
                     if case .pending = stateViewModel.status {
-                        
+                        stateViewModel.load(url: url)
                     }
-//                    stateViewModel.load(url: url)
                 }
         case let .loaded(uiImage):
             completion(.success(Image(uiImage: uiImage)))

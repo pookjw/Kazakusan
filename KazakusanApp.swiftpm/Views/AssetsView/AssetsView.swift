@@ -22,7 +22,7 @@ struct AssetsView: View {
                             print(item)
                         }
                 }
-
+                
                 if index < (stateViewModel.itemsCount - 1) {
                     Color
                         .gray
@@ -34,25 +34,19 @@ struct AssetsView: View {
         }
         .listStyle(.plain)
         .onAppear {
-            tasksBag.store(task: .init(operation: {
-                await stateViewModel.requestRecents()
-            }))
+            if stateViewModel.itemsCount == 0 {
+                tasksBag.store(task: .init(operation: {
+                    await stateViewModel.requestRecents()
+                }))
+            }
         }
-//        .overlay(alignment: .center) {
-//            SpinnerView()
-//                .unfilledColor(Color.gray.opacity(0.5))
-//                .filledColor((colorScheme == .light) ? .black : .white)
-//                .padding(10.0)
-//                .background(.ultraThinMaterial)
-//                .frame(width: 60.0, height: 60.0)
-//        }
         .searchable(text: $stateViewModel.text)
         .onSubmit(of: .search, {
             tasksBag.store(task: .init {
                 await stateViewModel.request(text: stateViewModel.text)
             })
         })
-        .navigationTitle("Assets")
+        .navigationBarTitle("Assets", displayMode: .large)
     }
 }
 

@@ -41,9 +41,6 @@ struct DataCacheImageView<Content: View>: View {
                 }
         case let .loaded(uiImage):
             completion(.success(Image(uiImage: uiImage)))
-                .transaction { transaction in
-                    transaction.animation = .easeInOut
-                }
         case let .error(error):
             completion(.failure(error))
         }

@@ -7,5 +7,6 @@ struct ContentView: View {
         NavigationView {
             AssetsView()
         }
+        .navigationViewStyle(.columns)
     }
 }
